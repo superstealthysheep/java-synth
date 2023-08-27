@@ -6,6 +6,7 @@ import java.awt.*;
 public class SynthControlContainer extends JPanel {
     private Synthesizer synth;
     protected boolean on;
+    protected Point mouseClickLocation;
     
     public SynthControlContainer(Synthesizer synth) {
         this.synth = synth;

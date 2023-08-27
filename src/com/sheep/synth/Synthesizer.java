@@ -1,12 +1,16 @@
 package com.sheep.synth;
 
+import com.sheep.synth.utils.Utils;
+
 import javax.swing.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.HashMap;
 
 public class Synthesizer {
+    private static final HashMap<Character, Double> KEY_FREQUENCIES = new HashMap<>();
     // temporary
     private boolean shouldGenerate;
 
@@ -28,18 +32,33 @@ public class Synthesizer {
     });
 
     private final KeyAdapter keyAdapter = new KeyAdapter() { // what is this syntax?? :0
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (!audioThread.isRunning()) {
-                    shouldGenerate = true;
-                    audioThread.triggerPlayback();
+        @Override
+        public void keyPressed(KeyEvent e) {
+            if (!audioThread.isRunning()) {
+                for (Oscillator o : oscillators) {
+                    char k = e.getKeyChar();
+                    if (KEY_FREQUENCIES.containsKey(k)) {
+                        o.setKeyFrequency(KEY_FREQUENCIES.get(k));
+                    }
                 }
+                shouldGenerate = true;
+                audioThread.triggerPlayback();
             }
-            @Override
-            public void keyReleased(KeyEvent e) {
-                shouldGenerate = false;
-            }
-        };
+        }
+        @Override
+        public void keyReleased(KeyEvent e) {
+            shouldGenerate = false;
+        }
+    };
+
+    static { // anonymous?
+        final int STARTING_KEY = 48; // correspond to pitches according to MIDI spec. 48 = C3
+        // final int KEY_FREQUENCY_INCREMENT = 1;
+        final char[] KEYS = "zsxdcvgbhnjmq2w3er5t6y7ui9o0p[=]".toCharArray();
+        for (int i = 0; i < KEYS.length; i++) {
+            KEY_FREQUENCIES.put(KEYS[i], Utils.Tuning.midiToFrequency(i + STARTING_KEY));
+        }
+    }
 
     Synthesizer() { // what is this syntax.. constructor ig without access keyword?
         int oscillatorY = 0;
