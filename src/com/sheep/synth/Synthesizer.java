@@ -9,8 +9,8 @@ import java.awt.event.WindowEvent;
 public class Synthesizer {
     // temporary
     private boolean shouldGenerate;
-    private int wavePos;
 
+    private final Oscillator[] oscillators = new Oscillator[3];
     private final JFrame frame = new JFrame("Synthesizer");
     private final AudioThread audioThread = new AudioThread(() -> {
         if (!shouldGenerate) {
@@ -18,39 +18,57 @@ public class Synthesizer {
         }
         short[] s = new short[AudioThread.BUFFER_SIZE];
         for (int i = 0; i < AudioThread.BUFFER_SIZE; ++i) {
-            s[i] = (short)(Short.MAX_VALUE * Math.sin((2 * Math.PI * 550) / AudioInfo.SAMPLE_RATE * wavePos++));
+            double d = 0;
+            for (Oscillator o : oscillators) {
+                d += o.nextSample();
+            }
+            s[i] = (short)(Short.MAX_VALUE * d / oscillators.length); // divide to normalize
         }
         return s;
     });
 
-    Synthesizer() { // what is this syntax.. constructor ig without access keyword?
-        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        frame.setSize(600, 400);
-        frame.setResizable(false);
-        frame.setLayout(null);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true); //  clojure beckons
-        frame.addKeyListener(new KeyAdapter() { // what is this syntax?? :0
+    private final KeyAdapter keyAdapter = new KeyAdapter() { // what is this syntax?? :0
             @Override
             public void keyPressed(KeyEvent e) {
                 if (!audioThread.isRunning()) {
                     shouldGenerate = true;
                     audioThread.triggerPlayback();
                 }
-                // shouldGenerate=true;
-                // audioThread.triggerPlayback();
             }
             @Override
             public void keyReleased(KeyEvent e) {
                 shouldGenerate = false;
             }
-        });
+        };
+
+    Synthesizer() { // what is this syntax.. constructor ig without access keyword?
+        int oscillatorY = 0;
+        for (int i = 0; i < oscillators.length; ++i) {
+            oscillators[i] = new Oscillator(this);
+            oscillators[i].setLocation(5, oscillatorY);
+            frame.add(oscillators[i]);
+            oscillatorY += 105;
+        }
+
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        frame.setSize(600, 400);
+        frame.setResizable(false);
+        frame.setLayout(null);
+        frame.setLocationRelativeTo(null);
+
+        frame.setVisible(true); //  clojure beckons
+        
+        frame.addKeyListener(keyAdapter);
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 audioThread.close();
             }
         });
+    }
+
+    public KeyAdapter getKeyAdapter() {
+        return keyAdapter;
     }
 
     public static class AudioInfo {
