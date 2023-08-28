@@ -10,25 +10,24 @@ import java.util.Random;
 
 public class Oscillator extends SynthControlContainer {
     private static final int TONE_OFFSET_LIMIT = 2000;
+    private final Random random = new Random();
 
     private Waveform waveform = Waveform.Sine;
-    // private static final double FREQUENCY = 440;
-    private final Random random = new Random();
-    private double keyFrequency = 440;
-    private double frequency;
-    private int toneOffset;
-    private int wavePos;
-
+    private double baseFrequency;
+    private double frequency; // true frequency once toneOffset is applied
+    private int toneOffset; // logarithmic-scale pitch offset. 1000 is one octave
+    private Wavetable wavetable = Wavetable.Sine;
+    private double wavetablePos;
+    private double wavetableStepSize;
 
     public Oscillator(Synthesizer synth) {
         super(synth);
-        JComboBox<Waveform> comboBox = 
-        new JComboBox<>(new Waveform[] {Waveform.Sine, Waveform.Square, Waveform.Saw, Waveform.Triangle, Waveform.Noise});
+        JComboBox<Waveform> comboBox = new JComboBox<>(Waveform.values());
         comboBox.setSelectedItem(Waveform.Sine);
         comboBox.setBounds(10, 10, 75, 25);
         comboBox.addItemListener(l -> {
             if (l.getStateChange() == ItemEvent.SELECTED) {
-                waveform = (Waveform) l.getItem();
+                setWaveform((Waveform) l.getItem());
             }
         });
         add(comboBox);
@@ -48,10 +47,18 @@ public class Oscillator extends SynthControlContainer {
             public void mouseReleased(MouseEvent e) {
                 setCursor(Cursor.getDefaultCursor());
             }
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    toneOffset = 0;
+                    toneParameter.setText(String.format(" %.3f", getToneOffset()));
+                    applyToneOffset();
+                }
+            }
         });
         toneParameter.addMouseMotionListener(new MouseAdapter() {
             @Override
-            public void mouseDragged(MouseEvent e) { // do something better than this
+            public void mouseDragged(MouseEvent e) { // TODO: experiment with different functions mapping dy to toneOffset increment
                 int dy = e.getYOnScreen() - mouseClickLocation.y; // note: pos y is downward
                 if (dy != 0) {
                     if (dy < 0 && toneOffset < TONE_OFFSET_LIMIT) {
@@ -75,6 +82,7 @@ public class Oscillator extends SynthControlContainer {
         JLabel toneText = new JLabel("Octave");
         toneText.setBounds(160, 40, 75, 25);
         add(toneText);
+
         setSize(275, 100);
         setBorder(Utils.WindowDesign.LINE_BORDER);
         setLayout(null);
@@ -84,12 +92,28 @@ public class Oscillator extends SynthControlContainer {
         Sine, Square, Saw, Triangle, Noise
     }
 
-    public double getKeyFrequency() {
-        return keyFrequency;
+    private void setWaveform(Waveform waveform) {
+        this.waveform = waveform;
+        switch (waveform) {
+            case Sine:
+                wavetable = Wavetable.Sine; break;
+            case Square:
+                wavetable = Wavetable.Square; break;
+            case Saw:
+                wavetable = Wavetable.Saw; break;
+            case Triangle:
+                wavetable = Wavetable.Triangle; break;
+            case Noise:
+                break;
+        }
     }
 
-    public void setKeyFrequency(double keyFrequency) {
-        this.keyFrequency = keyFrequency;
+    public double getBaseFrequency() {
+        return baseFrequency;
+    }
+
+    public void setBaseFrequency(double baseFrequency) {
+        this.baseFrequency = baseFrequency;
         applyToneOffset();
     }
     
@@ -97,17 +121,18 @@ public class Oscillator extends SynthControlContainer {
         return toneOffset / 1000d;
     }
     
+    private void applyToneOffset() {
+        frequency = baseFrequency * Math.pow(2, getToneOffset());
+        wavetableStepSize = frequency / Synthesizer.AudioInfo.SAMPLE_RATE * Wavetable.SIZE;
+    }
+    
     public double nextSample() {
-        double tDivP = (wavePos++ / (double) Synthesizer.AudioInfo.SAMPLE_RATE) * frequency; // t/P = t*nu
         switch (waveform) {
             case Sine:
-                return Math.sin(2d * Math.PI * tDivP);
             case Square:
-                return Math.signum(Math.sin(2d * Math.PI * tDivP));
             case Saw:
-                return 2d * (tDivP - Math.floor(0.5d + tDivP));
             case Triangle:
-                return 2d * Math.abs(2d * (tDivP - Math.floor(0.5d + tDivP))) - 1;
+                return nextWavetableSample();
             case Noise:
                 return random.nextDouble();
             default:
@@ -115,7 +140,16 @@ public class Oscillator extends SynthControlContainer {
         }
     }
 
-    private void applyToneOffset() {
-        frequency = keyFrequency * Math.pow(2, getToneOffset());
+    public double nextWavetableSample() {
+        // linearly interpolate wavetable entries for sample
+        int left = (int) wavetablePos;
+        int right = (left + 1) % Wavetable.SIZE;
+        double frac = wavetablePos - left;
+        float[] samples = wavetable.getSamples();
+        
+        wavetablePos += wavetableStepSize;
+        wavetablePos %= Wavetable.SIZE;
+
+        return (double) (samples[left] + frac * (samples[right] - samples[left]));
     }
 }

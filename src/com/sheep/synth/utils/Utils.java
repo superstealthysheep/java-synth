@@ -7,8 +7,6 @@ import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Robot;
         
-import static java.lang.Math.PI;
-        
 public class Utils {
     public static void handleProcedure(Procedure procedure, boolean printStackTrace) {
         try {
@@ -35,15 +33,15 @@ public class Utils {
         public static final Border LINE_BORDER = BorderFactory.createLineBorder(Color.BLACK);
     }
 
-    public static class Math {
-        public static double frequencyToAngularFrequency(double freq) {
-            return 2 * PI * freq;
-        }
+    // public static class Math {
+    //     public static double frequencyToAngularFrequency(double freq) {
+    //         return 2 * PI * freq;
+    //     }
 
-        // public static double frequencyToRadPerSample(double freq) {
-        //     return 2 * PI * freq / Synthesizer.AudioInfo.SAMPLE_RATE;
-        // }
-    }
+    //     // public static double frequencyToRadPerSample(double freq) {
+    //     //     return 2 * PI * freq / Synthesizer.AudioInfo.SAMPLE_RATE;
+    //     // }
+    // }
 
     public static class Tuning {
         // public static final double twelfthRootTwo = java.lang.Math.pow(2, 1d/12);

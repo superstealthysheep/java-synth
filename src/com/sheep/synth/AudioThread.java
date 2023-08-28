@@ -46,9 +46,6 @@ public class AudioThread extends Thread {
         while (!closed) {
             while (!running) {
                 Utils.handleProcedure(this::wait, false); // "the wait doesn't use cpu, while e.g. sleeping 1ms would"
-                // try {
-                //     Thread.sleep(500);
-                // } catch (Exception e) {}
             }
             int processedBufs = alGetSourcei(source, AL_BUFFERS_PROCESSED);
             for (int i = 0; i < processedBufs; i++) {

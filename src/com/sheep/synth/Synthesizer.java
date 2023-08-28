@@ -10,10 +10,9 @@ import java.awt.event.WindowEvent;
 import java.util.HashMap;
 
 public class Synthesizer {
-    private static final HashMap<Character, Double> KEY_FREQUENCIES = new HashMap<>();
-    // temporary
     private boolean shouldGenerate;
 
+    private static final HashMap<Character, Double> KEY_FREQUENCIES = new HashMap<>();
     private final Oscillator[] oscillators = new Oscillator[3];
     private final JFrame frame = new JFrame("Synthesizer");
     private final AudioThread audioThread = new AudioThread(() -> {
@@ -34,13 +33,13 @@ public class Synthesizer {
     private final KeyAdapter keyAdapter = new KeyAdapter() { // what is this syntax?? :0
         @Override
         public void keyPressed(KeyEvent e) {
-            if (!audioThread.isRunning()) {
-                for (Oscillator o : oscillators) {
-                    char k = e.getKeyChar();
-                    if (KEY_FREQUENCIES.containsKey(k)) {
-                        o.setKeyFrequency(KEY_FREQUENCIES.get(k));
-                    }
+            for (Oscillator o : oscillators) {
+                char k = e.getKeyChar();
+                if (KEY_FREQUENCIES.containsKey(k)) {
+                    o.setBaseFrequency(KEY_FREQUENCIES.get(k));
                 }
+            }
+            if (!audioThread.isRunning()) {
                 shouldGenerate = true;
                 audioThread.triggerPlayback();
             }
@@ -50,6 +49,10 @@ public class Synthesizer {
             shouldGenerate = false;
         }
     };
+
+    public KeyAdapter getKeyAdapter() {
+        return keyAdapter;
+    }
 
     static { // anonymous?
         final int STARTING_KEY = 48; // correspond to pitches according to MIDI spec. 48 = C3
@@ -74,7 +77,6 @@ public class Synthesizer {
         frame.setResizable(false);
         frame.setLayout(null);
         frame.setLocationRelativeTo(null);
-
         frame.setVisible(true); //  clojure beckons
         
         frame.addKeyListener(keyAdapter);
@@ -84,10 +86,6 @@ public class Synthesizer {
                 audioThread.close();
             }
         });
-    }
-
-    public KeyAdapter getKeyAdapter() {
-        return keyAdapter;
     }
 
     public static class AudioInfo {
