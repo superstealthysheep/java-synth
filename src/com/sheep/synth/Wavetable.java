@@ -3,7 +3,7 @@ package com.sheep.synth;
 public enum Wavetable {
     Sine, Square, Saw, Triangle;
 
-    static final int SIZE = 4096;
+    static final int SIZE = 64;
 
     private final float[] samples = new float[SIZE];
 

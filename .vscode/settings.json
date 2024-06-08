@@ -8,6 +8,10 @@
         "libs/lwjgl-openal-natives-windows.jar",
         "libs/lwjgl-openal-javadoc.jar",
         "libs/lwjgl-natives-windows.jar",
-        "libs/lwjgl-javadoc.jar"
+        "libs/lwjgl-javadoc.jar",
+        "libs/lwjgl-stb.jar",
+        "libs/lwjgl-stb-javadoc.jar",
+        "libs/lwjgl-stb-natives-windows.jar",
+        "libs/lwjgl-stb-sources.jar"
     ]
 }
