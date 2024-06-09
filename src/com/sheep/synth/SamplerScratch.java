@@ -26,6 +26,7 @@ public class SamplerScratch implements AutoCloseable {
         private final int samplesLength;
         private final float samplesSec;
         public int sampleIndex;
+        public float index;
         // private final short[] sampleTable; // just hold onto these in a java array that we can randomly index into. can optimize later
         private final ShortBuffer sampleTable;
 
@@ -38,14 +39,18 @@ public class SamplerScratch implements AutoCloseable {
                 // Goal: open ogg vorbis file into memory as "a big wavetable" that we can stride through
                 // Q: do we want this big wavetable to be a regular Java array, or do we want it to be the lower-level lwjgl native array thing?
                 // handle = STBVorbis.stb_vorbis_open_filename("../sounds/meow.ogg", error, null);
-                handle = STBVorbis.stb_vorbis_open_filename("../sounds/meow.ogg", error, null); // not sure what alloc_buffer null does
+                handle = STBVorbis.stb_vorbis_open_filename("sounds/meow.ogg", error, null); // not sure what alloc_buffer null does
                 if (handle == MemoryUtil.NULL) {
                     throw new RuntimeException("Error opening ogg vorbis. Error: " + error.get(0));
                 }
-                STBVorbisInfo info = STBVorbisInfo.mallocStack(stack);
+                STBVorbisInfo info = STBVorbisInfo.malloc(stack);
                 // print(info);
+
+                STBVorbis.stb_vorbis_get_info(handle, info);
                 this.channels = info.channels();
                 this.sampleRate = info.sample_rate();
+                System.out.println("Channels: " + this.channels);
+                System.out.println("Sample rate: " + this.sampleRate);
             }
 
             this.samplesLength = STBVorbis.stb_vorbis_stream_length_in_samples(handle);
@@ -69,12 +74,21 @@ public class SamplerScratch implements AutoCloseable {
 
         // assumes mono audio for now
         public short fetchSample(int index) {
+            if (index % 10000 == 0) System.out.println(index);
             return sampleTable.get(index);
+        }
+
+        public short fetchInterpolatedSample(float index) {
+            int x = (int) index;
+            float right_fraction = index - x;
+            float res = 0;
+            res = (1-right_fraction) * fetchSample(x) + right_fraction * fetchSample((x + 1) % samplesLength);
+            return (short) res;
         }
 
     }
 
-    private final AudioThread audioThread = new AudioThread(() -> {
+    public final AudioThread audioThread = new AudioThread(() -> {
         // if (!shouldGenerate) {
         //     return null;
         // }
@@ -82,11 +96,15 @@ public class SamplerScratch implements AutoCloseable {
         for (int i = 0; i < AudioThread.BUFFER_SIZE; ++i) {
             double d = 0;
             // for (Oscillator o : oscillators) {
-                d += track.fetchSample(track.sampleIndex);
+                // d += track.fetchSample(track.sampleIndex);
             // }
-            s[i] = (short)(Short.MAX_VALUE * d); // divide to normalize when mixing
+            // s[i] = (short)(Short.MAX_VALUE * d); // divide to normalize when mixing
+            // s[i] = track.fetchSample(track.sampleIndex);
             // s[i] = d;
-            track.sampleIndex = (track.sampleIndex + 1) % track.samplesLength; // TODO: account for mismatched sample rates
+            float speed = 0.5f;
+            s[i] = track.fetchInterpolatedSample(track.index);
+            track.index = (track.index + speed) % track.samplesLength;
+            // track.sampleIndex = (track.sampleIndex + 1) % track.samplesLength; // TODO: account for mismatched sample rates
         }
         return s;
     });
@@ -105,6 +123,7 @@ public class SamplerScratch implements AutoCloseable {
     public static void main(String[] args) {
         // private 
         SamplerScratch samp = new SamplerScratch();
+        samp.audioThread.triggerPlayback();
         // samp.play();
 
     } 
