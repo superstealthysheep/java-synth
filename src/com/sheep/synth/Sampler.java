@@ -8,21 +8,20 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 // import java.util.Random;
 
-public class Sampler extends SynthControlContainer {
+public class Sampler extends SynthControlContainer implements AudioSource {
     private static final int TONE_OFFSET_LIMIT = 2000;
-    // private final Random random = new Random();
 
-    // private Waveform waveform = Waveform.Sine;
     private double baseFrequency;
     private double frequency; // true frequency once toneOffset is applied
     private int toneOffset; // logarithmic-scale pitch offset. 1000 is one octave
-    // private Wavetable wavetable = Wavetable.Sine;
-    private float[] wavetable;
+    private AudioTrack wavetable;
     private double wavetablePos;
     private double wavetableStepSize;
 
     public Sampler(Synthesizer synth) {
         super(synth);
+
+        wavetable = new AudioTrack("sounds/meow.ogg");
         // JComboBox<Waveform> comboBox = new JComboBox<>(Waveform.values());
         // comboBox.setSelectedItem(Waveform.Sine);
         // comboBox.setBounds(10, 10, 75, 25);
@@ -89,30 +88,6 @@ public class Sampler extends SynthControlContainer {
         setLayout(null);
     }
 
-    // private enum Waveform {
-    //     Sine, Square, Saw, Triangle, Noise
-    // }
-
-    // private void setWaveform(Waveform waveform) {
-    //     this.waveform = waveform;
-    //     switch (waveform) {
-    //         case Sine:
-    //             wavetable = Wavetable.Sine; break;
-    //         case Square:
-    //             wavetable = Wavetable.Square; break;
-    //         case Saw:
-    //             wavetable = Wavetable.Saw; break;
-    //         case Triangle:
-    //             wavetable = Wavetable.Triangle; break;
-    //         case Noise:
-    //             break;
-    //     }
-    // }
-
-    public void loadWavetable() {
-
-    }
-
     public double getBaseFrequency() {
         return baseFrequency;
     }
@@ -128,34 +103,27 @@ public class Sampler extends SynthControlContainer {
     
     private void applyToneOffset() {
         frequency = baseFrequency * Math.pow(2, getToneOffset());
-        wavetableStepSize = frequency / Synthesizer.AudioInfo.SAMPLE_RATE * Wavetable.SIZE;
+        // double multiplier = Math.pow(2, getToneOffset());
+
+        // wavetableStepSize = frequency / Synthesizer.AudioInfo.SAMPLE_RATE * wavetable.samplesLength; // TODO: check dim analysis
+        wavetableStepSize = frequency / 440 * wavetable.sampleRate / Synthesizer.AudioInfo.SAMPLE_RATE; // TODO: check dim analysis
     }
     
     public double nextSample() {
         return nextWavetableSample();
-        // switch (waveform) {
-        //     case Sine:
-        //     case Square:
-        //     case Saw:
-        //     case Triangle:
-        //         return nextWavetableSample();
-        //     case Noise:
-        //         return random.nextDouble();
-        //     default:
-        //         throw new RuntimeException("Oscillator set to unknown waveform");
-        // }
     }
 
     public double nextWavetableSample() {
         // linearly interpolate wavetable entries for sample
         int left = (int) wavetablePos;
-        int right = (left + 1) % Wavetable.SIZE;
+        int right = (left + 1) % wavetable.samplesLength;
         double frac = wavetablePos - left;
-        float[] samples = wavetable.getSamples();
-        
         wavetablePos += wavetableStepSize;
-        wavetablePos %= Wavetable.SIZE;
+        // wavetablePos += 1;
+        wavetablePos %= wavetable.samplesLength;
+        short samp_l = wavetable.fetchSample(left);
+        short samp_r = wavetable.fetchSample(right);
 
-        return (double) (samples[left] + frac * (samples[right] - samples[left]));
+        return (double) (samp_l + frac * (samp_r - samp_l)) / Short.MAX_VALUE;
     }
 }

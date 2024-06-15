@@ -25,10 +25,9 @@ public class SamplerScratch implements AutoCloseable {
         private final int sampleRate;
         private final int samplesLength;
         private final float samplesSec;
-        public int sampleIndex;
+        public float sampleIndex;
         public float index;
-        // private final short[] sampleTable; // just hold onto these in a java array that we can randomly index into. can optimize later
-        private final ShortBuffer sampleTable;
+        private final ShortBuffer sampleTable; // just hold the whole file as one chunk
 
 
         public AudioTrack() {
@@ -82,6 +81,7 @@ public class SamplerScratch implements AutoCloseable {
             int x = (int) index;
             float right_fraction = index - x;
             float res = 0;
+
             res = (1-right_fraction) * fetchSample(x) + right_fraction * fetchSample((x + 1) % samplesLength);
             return (short) res;
         }

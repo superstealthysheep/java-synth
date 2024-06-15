@@ -8,7 +8,7 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.Random;
 
-public class Oscillator extends SynthControlContainer {
+public class Oscillator extends SynthControlContainer implements AudioSource {
     private static final int TONE_OFFSET_LIMIT = 2000;
     private final Random random = new Random();
 

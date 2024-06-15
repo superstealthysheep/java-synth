@@ -14,6 +14,7 @@ public class Synthesizer {
 
     private static final HashMap<Character, Double> KEY_FREQUENCIES = new HashMap<>();
     private final Oscillator[] oscillators = new Oscillator[3];
+    private final AudioSource[] audioSources = new AudioSource[3];
     private final JFrame frame = new JFrame("Synthesizer");
     private final AudioThread audioThread = new AudioThread(() -> {
         if (!shouldGenerate) {
@@ -22,10 +23,10 @@ public class Synthesizer {
         short[] s = new short[AudioThread.BUFFER_SIZE];
         for (int i = 0; i < AudioThread.BUFFER_SIZE; ++i) {
             double d = 0;
-            for (Oscillator o : oscillators) {
-                d += o.nextSample();
+            for (AudioSource as : audioSources) {
+                d += as.nextSample();
             }
-            s[i] = (short)(Short.MAX_VALUE * d / oscillators.length); // divide to normalize
+            s[i] = (short)(Short.MAX_VALUE * d / audioSources.length); // divide to normalize
         }
         return s;
     });
@@ -33,10 +34,10 @@ public class Synthesizer {
     private final KeyAdapter keyAdapter = new KeyAdapter() { // what is this syntax?? :0
         @Override
         public void keyPressed(KeyEvent e) {
-            for (Oscillator o : oscillators) {
+            for (AudioSource as : audioSources) {
                 char k = e.getKeyChar();
                 if (KEY_FREQUENCIES.containsKey(k)) {
-                    o.setBaseFrequency(KEY_FREQUENCIES.get(k));
+                    as.setBaseFrequency(KEY_FREQUENCIES.get(k));
                 }
             }
             if (!audioThread.isRunning()) {
@@ -66,9 +67,10 @@ public class Synthesizer {
     Synthesizer() { // what is this syntax.. constructor ig without access keyword?
         int oscillatorY = 0;
         for (int i = 0; i < oscillators.length; ++i) {
-            oscillators[i] = new Oscillator(this);
-            oscillators[i].setLocation(5, oscillatorY);
-            frame.add(oscillators[i]);
+            Sampler o = new Sampler(this);
+            o.setLocation(5, oscillatorY);
+            audioSources[i] = o;
+            frame.add(o); // TODO: NEED to find a better way to decouple UI and sound logic
             oscillatorY += 105;
         }
 
