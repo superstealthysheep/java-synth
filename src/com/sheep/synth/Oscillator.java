@@ -152,4 +152,6 @@ public class Oscillator extends SynthControlContainer implements AudioSource {
 
         return (double) (samples[left] + frac * (samples[right] - samples[left]));
     }
+
+    public void seekStart() {}
 }

@@ -8,14 +8,18 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class Synthesizer {
     private boolean shouldGenerate;
 
-    private static final HashMap<Character, Double> KEY_FREQUENCIES = new HashMap<>();
+    // private static final HashMap<Character, Double> KEY_FREQUENCIES = new HashMap<>();
+    private static final HashMap<Integer, Double> KEY_FREQUENCIES = new HashMap<>();
     private final Oscillator[] oscillators = new Oscillator[3];
     private final AudioSource[] audioSources = new AudioSource[3];
     private final JFrame frame = new JFrame("Synthesizer");
+    private HashSet<Integer> keysPressed = new HashSet<>(); // could just do an array but will keep this for flexibility
+
     private final AudioThread audioThread = new AudioThread(() -> {
         if (!shouldGenerate) {
             return null;
@@ -35,10 +39,12 @@ public class Synthesizer {
         @Override
         public void keyPressed(KeyEvent e) {
             for (AudioSource as : audioSources) {
-                char k = e.getKeyChar();
+                // char k = e.getKeyChar();
+                keysPressed.add(e.getKeyCode());
                 if (KEY_FREQUENCIES.containsKey(k)) {
                     as.setBaseFrequency(KEY_FREQUENCIES.get(k));
-                }
+                } // else if (k == '/') {
+                // }
             }
             if (!audioThread.isRunning()) {
                 shouldGenerate = true;
@@ -47,6 +53,9 @@ public class Synthesizer {
         }
         @Override
         public void keyReleased(KeyEvent e) {
+            for (AudioSource as : audioSources) {
+                as.seekStart();
+            }
             shouldGenerate = false;
         }
     };
@@ -66,6 +75,11 @@ public class Synthesizer {
 
     Synthesizer() { // what is this syntax.. constructor ig without access keyword?
         int oscillatorY = 0;
+        //     {Oscillator o = new Oscillator(this);
+        //     o.setLocation(5, oscillatorY);
+        //     audioSources[0] = o;
+        //     frame.add(o); // TODO: NEED to find a better way to decouple UI and sound logic
+        //     oscillatorY += 105;}
         for (int i = 0; i < oscillators.length; ++i) {
             Sampler o = new Sampler(this);
             o.setLocation(5, oscillatorY);

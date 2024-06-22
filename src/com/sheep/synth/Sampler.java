@@ -21,7 +21,7 @@ public class Sampler extends SynthControlContainer implements AudioSource {
     public Sampler(Synthesizer synth) {
         super(synth);
 
-        wavetable = new AudioTrack("sounds/meow.ogg");
+        wavetable = new AudioTrack("sounds/rory_noises.ogg");
         // JComboBox<Waveform> comboBox = new JComboBox<>(Waveform.values());
         // comboBox.setSelectedItem(Waveform.Sine);
         // comboBox.setBounds(10, 10, 75, 25);
@@ -103,10 +103,10 @@ public class Sampler extends SynthControlContainer implements AudioSource {
     
     private void applyToneOffset() {
         frequency = baseFrequency * Math.pow(2, getToneOffset());
+        // wavetablePos = 0; // seek to start. feels natural to do this
         // double multiplier = Math.pow(2, getToneOffset());
 
-        // wavetableStepSize = frequency / Synthesizer.AudioInfo.SAMPLE_RATE * wavetable.samplesLength; // TODO: check dim analysis
-        wavetableStepSize = frequency / 440 * wavetable.sampleRate / Synthesizer.AudioInfo.SAMPLE_RATE; // TODO: check dim analysis
+        wavetableStepSize = 3*frequency / 626 * wavetable.sampleRate / Synthesizer.AudioInfo.SAMPLE_RATE; // the magic number is to tune the sample
     }
     
     public double nextSample() {
@@ -125,5 +125,9 @@ public class Sampler extends SynthControlContainer implements AudioSource {
         short samp_r = wavetable.fetchSample(right);
 
         return (double) (samp_l + frac * (samp_r - samp_l)) / Short.MAX_VALUE;
+    }
+
+    public void seekStart() {
+        wavetablePos = 0;
     }
 }
