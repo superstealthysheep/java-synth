@@ -21,7 +21,7 @@ public class Sampler extends SynthControlContainer implements AudioSource {
     public Sampler(Synthesizer synth) {
         super(synth);
 
-        wavetable = new AudioTrack("sounds/rory_noises.ogg");
+        wavetable = new AudioTrack("sounds/meow_trimmed.ogg");
         // JComboBox<Waveform> comboBox = new JComboBox<>(Waveform.values());
         // comboBox.setSelectedItem(Waveform.Sine);
         // comboBox.setBounds(10, 10, 75, 25);

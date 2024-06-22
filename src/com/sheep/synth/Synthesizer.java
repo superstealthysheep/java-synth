@@ -40,7 +40,8 @@ public class Synthesizer {
         public void keyPressed(KeyEvent e) {
             for (AudioSource as : audioSources) {
                 // char k = e.getKeyChar();
-                keysPressed.add(e.getKeyCode());
+                int k = e.getKeyCode();
+                keysPressed.add(k);
                 if (KEY_FREQUENCIES.containsKey(k)) {
                     as.setBaseFrequency(KEY_FREQUENCIES.get(k));
                 } // else if (k == '/') {
@@ -53,10 +54,13 @@ public class Synthesizer {
         }
         @Override
         public void keyReleased(KeyEvent e) {
-            for (AudioSource as : audioSources) {
-                as.seekStart();
+            keysPressed.remove(e.getKeyCode());
+            if (keysPressed.size() == 0) {
+                for (AudioSource as : audioSources) {
+                    as.seekStart();
+                }
+                shouldGenerate = false;
             }
-            shouldGenerate = false;
         }
     };
 
@@ -69,7 +73,8 @@ public class Synthesizer {
         // final int KEY_FREQUENCY_INCREMENT = 1;
         final char[] KEYS = "zsxdcvgbhnjmq2w3er5t6y7ui9o0p[=]".toCharArray();
         for (int i = 0; i < KEYS.length; i++) {
-            KEY_FREQUENCIES.put(KEYS[i], Utils.Tuning.midiToFrequency(i + STARTING_KEY));
+            int keyCode = KeyEvent.getExtendedKeyCodeForChar(KEYS[i]);
+            KEY_FREQUENCIES.put(keyCode, Utils.Tuning.midiToFrequency(i + STARTING_KEY));
         }
     }
 
