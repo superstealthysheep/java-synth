@@ -12,6 +12,17 @@
         "libs/lwjgl-stb.jar",
         "libs/lwjgl-stb-javadoc.jar",
         "libs/lwjgl-stb-natives-windows.jar",
-        "libs/lwjgl-stb-sources.jar"
-    ]
+        "libs/lwjgl-stb-sources.jar",
+        "libs/JTransforms-3.1-with-dependencies.jar",
+        "libs/commons-math3-3.5.jar",
+        "libs/commons-math3-3.5-javadoc.jar",
+        "libs/commons-math3-3.5-sources.jar",
+        "libs/JLargeArrays-1.5.jar",
+        "libs/JLargeArrays-1.5-javadoc.jar",
+        "libs/JLargeArrays-1.5-sources.jar",
+        "libs/JTransforms-3.1.jar",
+        "libs/JTransforms-3.1-javadoc.jar",
+        "libs/JTransforms-3.1-sources.jar"
+    ],
+    "maven.view": "hierarchical",
 }

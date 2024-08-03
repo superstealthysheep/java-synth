@@ -2,6 +2,7 @@ Project seeded by [G223 Productions video](https://www.youtube.com/watch?v=q09cN
 ### Libraries
 - LWJGL OpenAL Binding (3.3.2)
 - LWJGL STB Binding (3.1.4) (i hope this is compatible)
+- JTransforms (3.1)
 
 Future ideas:
 - Add eq (get to implement fft :))
