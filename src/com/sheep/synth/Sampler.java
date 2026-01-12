@@ -23,7 +23,7 @@ public class Sampler extends SynthControlContainer implements AudioSource {
     public Sampler(Synthesizer synth) {
         super(synth);
 
-        wavetable = new AudioTrack("sounds/scratch_meow_trimmed.ogg");
+        wavetable = new AudioTrack("sounds/meow_trimmed.ogg");
         // JComboBox<Waveform> comboBox = new JComboBox<>(Waveform.values());
         // comboBox.setSelectedItem(Waveform.Sine);
         // comboBox.setBounds(10, 10, 75, 25);
@@ -161,7 +161,7 @@ public class Sampler extends SynthControlContainer implements AudioSource {
     private void applyToneOffset() {
         frequency = baseFrequency * Math.pow(2, getToneOffset());
 
-        wavetableStepSize = 4*frequency / 626 * wavetable.sampleRate / Synthesizer.AudioInfo.SAMPLE_RATE; // the magic number is to tune the sample
+        wavetableStepSize = frequency / 626 * 4 * wavetable.sampleRate / Synthesizer.AudioInfo.SAMPLE_RATE; // the magic number is to tune the sample
     }
     
     public double nextSample() {
